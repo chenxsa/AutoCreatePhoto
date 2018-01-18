@@ -1,0 +1,9 @@
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\bin\Debug\AutoCreatePhoto.exe.config
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\bin\Debug\AutoCreatePhoto.exe
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\bin\Debug\AutoCreatePhoto.pdb
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.Form1.resources
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.Properties.Resources.resources
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.csproj.GenerateResource.Cache
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.csproj.CoreCompileInputs.cache
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.exe
+c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.pdb
