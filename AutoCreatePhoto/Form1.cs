@@ -49,6 +49,7 @@ namespace AutoCreatePhoto
                 {
                     this.pictureBox1.ImageLocation = this.openFileDialog1.FileName;
                 }
+                
             }
         }
 

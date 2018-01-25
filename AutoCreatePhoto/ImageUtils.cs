@@ -9,6 +9,8 @@ namespace AutoCreatePhoto
     using System;
     using System.Drawing;
     using System.Drawing.Drawing2D;
+    using System.Drawing.Imaging;
+
     public enum CombineMode
     {
         /// <summary>
@@ -162,6 +164,7 @@ namespace AutoCreatePhoto
             graphics.ResetTransform();
             graphics.Save();
             graphics.Dispose();
+            image =new Bitmap( Reduce(image, 1024));
             return image;
         }
         public static Bitmap NewCompose(Image image1, Image image2, Image bgImage,CombineMode combineMode)
@@ -174,8 +177,18 @@ namespace AutoCreatePhoto
             {
                 throw new ArgumentNullException("image2");
             }
-            int width = 1024;
-            int height = 1024;
+            //image1 =Reduce(image1, 512);
+            //image2 = Reduce(image2, 512);
+            int width = image1.Width+image2.Width;
+            int height = image2.Height+image2.Height;
+            if (width>height)
+            {
+                height = width;
+            }
+            else
+            {
+                width = height;
+            }
             Bitmap image = new Bitmap(width, height);
             Graphics graphics = Graphics.FromImage(image);
             //画底图 
@@ -259,15 +272,15 @@ namespace AutoCreatePhoto
         {
             int height = (int)((((double)toWidth) / ((double)originalImage.Width)) * originalImage.Height);
             Image image = new Bitmap(toWidth, height);
-            using (Graphics graphics = Graphics.FromImage(image))
-            {
-                graphics.InterpolationMode = InterpolationMode.High;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.Clear(Color.Transparent);
-                graphics.DrawImage(originalImage, new Rectangle(0, 0, toWidth, height), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
-                originalImage.Dispose();
-                return image;
-            }
+            Graphics graphics = Graphics.FromImage(image);
+
+            graphics.InterpolationMode = InterpolationMode.High;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.Clear(Color.Transparent);
+            graphics.DrawImage(originalImage, new Rectangle(0, 0, toWidth, height), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
+
+            return image;
+
         }
 
         public static Image Rotate(Image b, int angle)
@@ -302,6 +315,292 @@ namespace AutoCreatePhoto
             double num = angle % 360.0;
             double a = (num * 3.1415926535897931) / 180.0;
             return Math.Tan(a);
+        }
+        /// <summary>
+        ///  截取有效图片
+        /// </summary> 
+        /// <returns>处理后的图</returns>
+        public unsafe static Image CutEffectiveImage(Image img)
+        {
+
+            if (img == null) return null;
+            // 建立GraphicsPath, 给我们的位图路径计算使用   
+            GraphicsPath g = new GraphicsPath(FillMode.Alternate);
+            Bitmap bitmap = new Bitmap(img);
+            int width = bitmap.Width;
+            int height = bitmap.Height;
+            BitmapData bmData = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            byte* p = (byte*)bmData.Scan0;
+            int offset = bmData.Stride - width * 3;
+            int p0, p1, p2;         // 记录左上角0，0座标的颜色值  
+            p0 = p[0];
+            p1 = p[1];
+            p2 = p[2]; 
+            Point yminP = new Point(0, 0);
+            Point ymaxP = new Point(0, 0);
+            Point xminP = new Point(0, 0);
+            Point xmaxP = new Point(0, 0);
+            // 行座标 ( Y col )   
+            for (int y = 0; y < height; y++)
+            {
+                // 列座标 ( X row )   
+                for (int x = 0; x < width; x++)
+                {
+                    //如果不是背景色
+                    if (!IsWriteOrGren(p[0], p[1], p[2]))
+                    {
+                        if (y < yminP.Y || yminP.Y==0)
+                        {
+                            yminP = new Point(x, y);
+                        }
+                        else if (y > ymaxP.Y)
+                        {
+                            ymaxP = new Point(x, y);
+                        }
+                        if (x < xminP.X  || xminP.X==0)
+                        {
+                            xminP = new Point(x, y);
+                        }
+                        else if(x > xmaxP.X)
+                        {
+                            xmaxP = new Point(x, y);
+                        }
+                    } 
+                    p += 3;                                   //下一个内存地址  
+                }
+                p += offset;
+            }
+            bitmap.UnlockBits(bmData);
+
+            Image result = CaptureImage(bitmap, xminP.X, yminP.Y, xmaxP.X - xminP.X, ymaxP.Y - yminP.Y); 
+             
+            return new Bitmap(result);
+
+        }
+        static bool IsWriteOrGren(int r,int g,int b) {
+            if (r<170 || g<170 || b<170)
+            {
+                return false;
+            }
+            int split = Math.Abs(r - g);
+            split = Math.Abs(r - b) > split ? Math.Abs(r - b) : split;
+            split = Math.Abs(b - g) > split ? Math.Abs(b - g) : split;
+            if (split>25)
+            {
+                return false;
+            }
+            return true;
+        }
+        #region 从大图中截取一部分图片
+        /// <summary>
+        /// 从大图中截取一部分图片
+        /// </summary>
+        /// <param name="fromImage">来源图片</param>        
+        /// <param name="offsetX">从偏移X坐标位置开始截取</param>
+        /// <param name="offsetY">从偏移Y坐标位置开始截取</param> 
+        /// <param name="width">保存图片的宽度</param>
+        /// <param name="height">保存图片的高度</param>
+        /// <returns></returns>
+        public static Image CaptureImage(Image fromImage, int offsetX, int offsetY,  int width, int height)
+        { 
+            //创建新图位图
+            Bitmap bitmap = new Bitmap(width, height);
+            //创建作图区域
+            Graphics graphic = Graphics.FromImage(bitmap);
+            //截取原图相应区域写入作图区
+            graphic.DrawImage(fromImage, 0, 0, new Rectangle(offsetX, offsetY, width, height), GraphicsUnit.Pixel);
+            //从作图区生成新图
+            return Image.FromHbitmap(bitmap.GetHbitmap()); 
+        }
+        #endregion
+        /// <summary>
+        /// 色彩调整
+        /// </summary>
+        /// <param name="bmp">原始图</param>
+        /// <param name="rVal">r增量</param>
+        /// <param name="gVal">g增量</param>
+        /// <param name="bVal">b增量</param>
+        /// <returns>处理后的图</returns>
+        public static Bitmap KiColorBalance(Bitmap bmp, int rVal, int gVal, int bVal)
+        {
+
+            if (bmp == null)
+            {
+                return null;
+            }
+
+
+            int h = bmp.Height;
+            int w = bmp.Width;
+
+            try
+            {
+                if (rVal > 255 || rVal < -255 || gVal > 255 || gVal < -255 || bVal > 255 || bVal < -255)
+                {
+                    return null;
+                }
+
+                BitmapData srcData = bmp.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+
+                unsafe
+                {
+                    byte* p = (byte*)srcData.Scan0.ToPointer();
+
+                    int nOffset = srcData.Stride - w * 3;
+                    int r, g, b;
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        for (int x = 0; x < w; x++)
+                        {
+
+                            b = p[0] + bVal;
+                            if (bVal >= 0)
+                            {
+                                if (b > 255) b = 255;
+                            }
+                            else
+                            {
+                                if (b < 0) b = 0;
+                            }
+
+                            g = p[1] + gVal;
+                            if (gVal >= 0)
+                            {
+                                if (g > 255) g = 255;
+                            }
+                            else
+                            {
+                                if (g < 0) g = 0;
+                            }
+
+                            r = p[2] + rVal;
+                            if (rVal >= 0)
+                            {
+                                if (r > 255) r = 255;
+                            }
+                            else
+                            {
+                                if (r < 0) r = 0;
+                            }
+
+                            p[0] = (byte)b;
+                            p[1] = (byte)g;
+                            p[2] = (byte)r;
+
+                            p += 3;
+                        }
+
+                        p += nOffset;
+
+
+                    }
+                } // end of unsafe
+
+                bmp.UnlockBits(srcData);
+
+                return bmp;
+            }
+            catch
+            {
+                return null;
+            }
+
+        } // end of color
+        //使用方法调用GenerateHighThumbnail()方法即可
+        //参数oldImagePath表示要被缩放的图片路径
+        //参数newImagePath表示缩放后保存的图片路径
+        //参数width和height分别是缩放范围宽和高
+        public static void GenerateHighThumbnail(string oldImagePath, string newImagePath, int width, int height)
+        {
+            System.Drawing.Image oldImage = System.Drawing.Image.FromFile(oldImagePath);
+            int newWidth = AdjustSize(width, height, oldImage.Width, oldImage.Height).Width;
+            int newHeight = AdjustSize(width, height, oldImage.Width, oldImage.Height).Height;
+            //。。。。。。。。。。。
+            System.Drawing.Image thumbnailImage = oldImage.GetThumbnailImage(newWidth, newHeight, new System.Drawing.Image.GetThumbnailImageAbort(ThumbnailCallback), IntPtr.Zero);
+            System.Drawing.Bitmap bm = new System.Drawing.Bitmap(thumbnailImage);
+            //处理JPG质量的函数
+            System.Drawing.Imaging.ImageCodecInfo ici = GetEncoderInfo("image/jpeg");
+            if (ici != null)
+            {
+                System.Drawing.Imaging.EncoderParameters ep = new System.Drawing.Imaging.EncoderParameters(1);
+                ep.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, (long)100);
+                bm.Save(newImagePath, ici, ep);
+                //释放所有资源，不释放，可能会出错误。
+                ep.Dispose();
+                ep = null;
+            }
+            ici = null;
+            bm.Dispose();
+            bm = null;
+            thumbnailImage.Dispose();
+            thumbnailImage = null;
+            oldImage.Dispose();
+            oldImage = null;
+        }
+
+
+        private static bool ThumbnailCallback()
+        {
+            return false;
+        }
+
+
+        private static ImageCodecInfo GetEncoderInfo(String mimeType)
+        {
+            int j;
+            ImageCodecInfo[] encoders;
+            encoders = ImageCodecInfo.GetImageEncoders();
+            for (j = 0; j < encoders.Length; ++j)
+            {
+                if (encoders[j].MimeType == mimeType)
+                    return encoders[j];
+            }
+            return null;
+        }
+
+
+        public struct PicSize
+        {
+            public int Width;
+            public int Height;
+        }
+
+
+        public static PicSize AdjustSize(int spcWidth, int spcHeight, int orgWidth, int orgHeight)
+        {
+            PicSize size = new PicSize();
+            // 原始宽高在指定宽高范围内，不作任何处理 
+            if (orgWidth <= spcWidth && orgHeight <= spcHeight)
+            {
+                size.Width = orgWidth;
+                size.Height = orgHeight;
+            }
+            else
+            {
+                // 取得比例系数 
+                float w = orgWidth / (float)spcWidth;
+                float h = orgHeight / (float)spcHeight;
+                // 宽度比大于高度比 
+                if (w > h)
+                {
+                    size.Width = spcWidth;
+                    size.Height = (int)(w >= 1 ? Math.Round(orgHeight / w) : Math.Round(orgHeight * w));
+                }
+                // 宽度比小于高度比 
+                else if (w < h)
+                {
+                    size.Height = spcHeight;
+                    size.Width = (int)(h >= 1 ? Math.Round(orgWidth / h) : Math.Round(orgWidth * h));
+                }
+                // 宽度比等于高度比 
+                else
+                {
+                    size.Width = spcWidth;
+                    size.Height = spcHeight;
+                }
+            }
+            return size;
         }
     }
 

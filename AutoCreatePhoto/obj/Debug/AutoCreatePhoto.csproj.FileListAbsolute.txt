@@ -7,3 +7,4 @@ c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\A
 c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.csproj.CoreCompileInputs.cache
 c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.exe
 c:\users\chenxsa.digiwin\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.pdb
+C:\Users\chenxsa.DIGIWIN\documents\visual studio 2017\Projects\AutoCreatePhoto\AutoCreatePhoto\obj\Debug\AutoCreatePhoto.csprojResolveAssemblyReference.cache
