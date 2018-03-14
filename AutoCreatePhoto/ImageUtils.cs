@@ -212,7 +212,7 @@ namespace AutoCreatePhoto
             {
                 case CombineMode.UptoDown:
                      x = image.Width / 2 -image1.Width / 2;
-                     y = image.Height / 2 - image1.Height ;
+                     y = image.Height / 2 - image1.Height-50 ;
                      point = new Point(x, y);
                     graphics.DrawImage(image1, point);
                     x = image.Width / 2 - image2.Width / 2;
@@ -224,12 +224,12 @@ namespace AutoCreatePhoto
                     graphics.Dispose();
                     break;
                 case CombineMode.LeftToRight:
-                    y = image.Height / 2 - image1.Height / 2; ;
-                    x = image.Width / 2 - image1.Width;
+                    y = image.Height / 2 - image1.Height / 2;
+                    x = image.Width / 2 - image1.Width+50;
                      point = new Point(x, y);
                     graphics.DrawImage(image1, point);
                     y = image.Height / 2 - image2.Height / 2; ;
-                    x = image.Width / 2 ;
+                    x = image.Width / 2 +50;
                     point = new Point(x, y);
                     graphics.DrawImage(image2, point);
                     graphics.ResetTransform();
@@ -237,11 +237,11 @@ namespace AutoCreatePhoto
                     graphics.Dispose(); 
                     break;
                 case CombineMode.Bevel:
-                    x = image.Width / 2 - image1.Width / 2-100;
+                    x = image.Width / 2 - image1.Width+50;
                     y = image.Height / 2 - image1.Height;
                     point = new Point(x, y);
                     graphics.DrawImage(image1, point);
-                    x = image.Width / 2 - image2.Width / 2+100;
+                    x = image.Width / 2+50;
                     y = image.Height / 2;
                     point = new Point(x, y);
                     graphics.DrawImage(image2, point);
@@ -250,11 +250,11 @@ namespace AutoCreatePhoto
                     graphics.Dispose();
                     break;
                 case CombineMode.UnBevel:
-                    y = image.Height / 2 - image1.Height / 2-100 ;
-                    x = image.Width / 2 - image1.Width;
+                    y = image.Height / 2 - image1.Height;
+                    x = image.Width / 2 ;
                     point = new Point(x, y);
                     graphics.DrawImage(image1, point);
-                    y = image.Height / 2 - image2.Height / 2+100;
+                    y = image.Height / 2;
                     x = image.Width / 2;
                     point = new Point(x, y);
                     graphics.DrawImage(image2, point);
